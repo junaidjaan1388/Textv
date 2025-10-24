@@ -1,160 +1,38 @@
-
-name: Deploy Text-to-Video App
+name: Deploy LTX Video App
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install FFmpeg for video processing
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
-
-    - name: Clone text-to-video repository
+    - name: Clone and setup LTX Video
       run: |
         git clone https://huggingface.co/spaces/Jaan15/ltx-video-distilled
-
-    - name: Set up virtual environment and dependencies
-      working-directory: ./ltx-video-distilled
-      run: |
+        cd ltx-video-distilled
+        
+        # Create and activate virtual environment
         python -m venv env
         source env/bin/activate
+        
+        # Install dependencies
         pip install --upgrade pip
         pip install -r requirements.txt
+        
+        # Run the application (optional for testing)
+        # python app.py
 
-    - name: Test text-to-video setup
+    - name: Test installation
       working-directory: ./ltx-video-distilled
       run: |
         source env/bin/activate
-        python -c "
-print('=== Text-to-Video Application Test ===')
-print('Testing if the application can start...')
-try:
-    # Test if we can import the main components
-    import gradio as gr
-    print('✓ Gradio imported successfully')
-    
-    # Check if app.py exists and can be imported
-    import importlib.util
-    spec = importlib.util.spec_from_file_location('app', 'app.py')
-    if spec is not None:
-        print('✓ app.py found and can be loaded')
-    else:
-        print('✗ app.py not found or cannot be loaded')
-    
-    print('✓ Text-to-video application is ready!')
-    print('The app can process text prompts and generate videos')
-    
-except Exception as e:
-    print(f'✗ Error during setup: {e}')
-"
-
-    - name: Run the text-to-video application
-      working-directory: ./ltx-video-distilled
-      env:
-        PYTHONPATH: .
-        HF_HUB_DISABLE_SYMLINKS_WARNING: '1'
-      run: |
-        source env/bin/activate
-        echo "🚀 Launching Text-to-Video Generator"
-        echo "The application will process text inputs and generate videos"
-        python app.py
-
-
-
-
-
-
-
-
-
-
-
-name: Deploy Text-to-Video App
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install FFmpeg for video processing
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
-
-    - name: Clone text-to-video repository
-      run: |
-        git clone https://huggingface.co/spaces/Jaan15/ltx-video-distilled
-
-    - name: Set up virtual environment and dependencies
-      working-directory: ./ltx-video-distilled
-      run: |
-        python -m venv env
-        source env/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Test text-to-video setup
-      working-directory: ./ltx-video-distilled
-      run: |
-        source env/bin/activate
-        python -c "
-print('=== Text-to-Video Application Test ===')
-print('Testing if the application can start...')
-try:
-    # Test if we can import the main components
-    import gradio as gr
-    print('✓ Gradio imported successfully')
-    
-    # Check if app.py exists and can be imported
-    import importlib.util
-    spec = importlib.util.spec_from_file_location('app', 'app.py')
-    if spec is not None:
-        print('✓ app.py found and can be loaded')
-    else:
-        print('✗ app.py not found or cannot be loaded')
-    
-    print('✓ Text-to-video application is ready!')
-    print('The app can process text prompts and generate videos')
-    
-except Exception as e:
-    print(f'✗ Error during setup: {e}')
-"
-
-    - name: Run the text-to-video application
-      working-directory: ./ltx-video-distilled
-      env:
-        PYTHONPATH: .
-        HF_HUB_DISABLE_SYMLINKS_WARNING: '1'
-      run: |
-        source env/bin/activate
-        echo "🚀 Launching Text-to-Video Generator"
-        echo "The application will process text inputs and generate videos"
-        python app.py
+        python -c "import sys; print('Python path:', sys.executable)"
+        pip list
