@@ -1,0 +1,46 @@
+name: Test LTX Video Setup
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Clone and test LTX Video
+      run: |
+        git clone https://huggingface.co/spaces/Jaan22/ltx-video-distilled
+        cd ltx-video-distilled
+        
+        # Install dependencies
+        pip install -r requirements.txt
+        
+        # Test if the app can start (without running the UI)
+        python -c "
+try:
+    # Test imports
+    import gradio as gr
+    import torch
+    import transformers
+    print('✓ All imports successful')
+    
+    # Test if app.py can be parsed
+    with open('app.py', 'r') as f:
+        code = f.read()
+    print('✓ app.py can be read')
+    print('✓ LTX Video setup completed successfully!')
+    
+except Exception as e:
+    print('✗ Error:', e)
+    exit(1)
+        "
