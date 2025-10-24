@@ -1,4 +1,4 @@
-name: Deploy LTX Video App
+name: Deploy Text-to-Video Generator
 
 on:
   push:
@@ -7,32 +7,67 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
     - name: Clone and setup LTX Video
       run: |
         git clone https://huggingface.co/spaces/Jaan15/ltx-video-distilled
         cd ltx-video-distilled
-        
-        # Create and activate virtual environment
         python -m venv env
         source env/bin/activate
-        
-        # Install dependencies
         pip install --upgrade pip
         pip install -r requirements.txt
-        
-        # Run the application (optional for testing)
-        # python app.py
 
-    - name: Test installation
+    - name: Test text-to-video installation
       working-directory: ./ltx-video-distilled
       run: |
         source env/bin/activate
-        python -c "import sys; print('Python path:', sys.executable)"
-        pip list
+        python -c "
+        # Test if essential packages are installed
+        try:
+            import torch
+            import transformers
+            import gradio
+            print('✓ All essential packages installed successfully')
+            print(f'PyTorch version: {torch.__version__}')
+            print(f'Transformers version: {transformers.__version__}')
+        except ImportError as e:
+            print(f'✗ Missing package: {e}')
+            exit(1)
+        "
+
+    - name: Run text-to-video generator (background)
+      working-directory: ./ltx-video-distilled
+      run: |
+        source env/bin/activate
+        # Run in background and capture PID
+        python app.py &
+        echo $! > app.pid
+        sleep 30  # Wait for app to start
+        
+        # Check if app is running
+        if ps -p $(cat app.pid) > /dev/null; then
+          echo "✓ Text-to-video generator is running successfully"
+        else
+          echo "✗ Failed to start text-to-video generator"
+          exit 1
+        fi
+
+    - name: Stop application
+      if: always()
+      working-directory: ./ltx-video-distilled
+      run: |
+        if [ -f app.pid ]; then
+          kill $(cat app.pid) 2>/dev/null || true
+          echo "Application stopped"
+        fi
