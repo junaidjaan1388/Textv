@@ -1,0 +1,38 @@
+name: Deploy LTX Video App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Clone and setup LTX Video
+      run: |
+        git clone https://huggingface.co/spaces/Jaan15/ltx-video-distilled
+        cd ltx-video-distilled
+        
+        # Create and activate virtual environment
+        python -m venv env
+        source env/bin/activate
+        
+        # Install dependencies
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Run the application (optional for testing)
+        # python app.py
+
+    - name: Test installation
+      working-directory: ./ltx-video-distilled
+      run: |
+        source env/bin/activate
+        python -c "import sys; print('Python path:', sys.executable)"
+        pip list
