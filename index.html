@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Legal YouTube Downloader (Frontend)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Roboto, "Segoe UI", Arial; padding: 2rem; max-width: 720px; margin: auto; }
+    input, select, button { font-size: 1rem; padding: .5rem; margin: .3rem 0; width: 100%; }
+    label { display:block; margin-top: .75rem; font-weight:600; }
+    .row { display:flex; gap: .5rem; }
+    .note { font-size:.9rem; color:#555; margin-top:.5rem; }
+    .log { margin-top:1rem; background:#f7f7f7;padding:1rem;border-radius:6px; max-height:200px; overflow:auto; font-family:monospace; }
+  </style>
+</head>
+<body>
+  <h1>Downloader (for content you own / have permission to use)</h1>
+
+  <label for="url">YouTube video URL</label>
+  <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+
+  <label for="type">Download type</label>
+  <select id="type">
+    <option value="video">MP4 (video)</option>
+    <option value="audio">MP3 (audio)</option>
+  </select>
+
+  <div class="row">
+    <button id="download">Start Download</button>
+    <button id="preview">Open in embed</button>
+  </div>
+
+  <div class="note">
+    This frontend sends the request to <code>/download</code> on the host where the backend runs.
+    The backend must implement a download endpoint and honor copyright & terms.
+  </div>
+
+  <div id="log" class="log"></div>
+
+  <script>
+    const log = (t) => {
+      const el = document.getElementById('log');
+      el.textContent += `[${new Date().toLocaleTimeString()}] ${t}\n`;
+      el.scrollTop = el.scrollHeight;
+    };
+
+    document.getElementById('preview').addEventListener('click', () => {
+      const url = document.getElementById('url').value.trim();
+      if (!url) return alert('Paste a video URL first');
+      const idMatch = url.match(/v=([^&]+)/) || url.match(/youtu\.be\/([^?&]+)/);
+      if (!idMatch) return alert('Could not parse video id from URL.');
+      const videoId = idMatch[1];
+      const embed = `https://www.youtube.com/embed/${videoId}`;
+      window.open(embed, '_blank', 'noopener');
+    });
+
+    document.getElementById('download').addEventListener('click', async () => {
+      const url = document.getElementById('url').value.trim();
+      const type = document.getElementById('type').value;
+      if (!url) return alert('Paste a video URL first');
+
+      log('Sending download request...');
+      try {
+        const params = new URLSearchParams({ url, type });
+        window.open(`/download?${params.toString()}`, '_blank', 'noopener');
+        log('Opened download in new tab. Check the tab for download progress.');
+      } catch (e) {
+        console.error(e);
+        log('Error sending request: ' + e.message);
+      }
+    });
+  </script>
+</body>
+</html>
